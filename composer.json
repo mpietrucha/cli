@@ -1,0 +1,35 @@
+{
+    "name": "mpietrucha/cli",
+    "description": "Cli output for php",
+    "type": "liblary",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Mpietrucha\\Cli\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Michał Pietrucha",
+            "email": "michal.pietrucha@off-site.pl"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.1",
+        "mpietrucha/support": "^1.0"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^6.2"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mpietrucha\\:vendor\\:provider"
+            ]
+        }
+    }
+}
