@@ -32,14 +32,14 @@ class Buffer
         }, 1);
     }
 
-    public static function explode(string $delimiter): self
+    public static function explode(string $delimiter, bool $skipSymfonyVarDumper = true): self
     {
-        return self::create(fn (string $output) => $output . $delimiter);
+        return self::create(fn (string $output) => $output . $delimiter, $skipSymfonyVarDumper);
     }
 
-    public static function newLine(): self
+    public static function newLine(bool $skipSymfonyVarDumper = true): self
     {
-        return self::explode(PHP_EOL);
+        return self::explode(PHP_EOL, $skipSymfonyVarDumper);
     }
 
     public static function line():void
