@@ -11,6 +11,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class Style extends SymfonyStyle
 {
+    protected bool $events = false;
+
     protected ?string $type = null;
 
     protected ?string $prefix = null;
@@ -85,8 +87,18 @@ class Style extends SymfonyStyle
 
     protected function events(Closure $middle): void
     {
-        collect([$this->beforeWrite, $middle, $this->afterWrite])->filter()->each(fn (Closure $callback) => $callback(
-            $this->type
-        ));
+        if (! $this->events) {
+            $this->events = true;
+
+            collect([$this->beforeWrite, $middle, $this->afterWrite])->filter()->each(fn (Closure $callback) => $callback(
+                $this->type
+            ));
+
+            return;
+        }
+
+        $middle();
+
+        $this->events = false;
     }
 }
