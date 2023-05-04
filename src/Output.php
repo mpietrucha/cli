@@ -29,7 +29,7 @@ class Output
 
         $this->setStyle($this->defaultStyle());
 
-        $this->forwardTo($this->style);
+        $this->forwardTo($this->style)->forwardThenReturnThis();
     }
 
     public function __destruct()
