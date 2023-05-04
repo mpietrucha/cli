@@ -28,12 +28,5 @@
     },
     "require-dev": {
         "symfony/var-dumper": "^6.2"
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Mpietrucha\\:vendor\\:provider"
-            ]
-        }
     }
 }
