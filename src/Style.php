@@ -98,7 +98,7 @@ class Style extends SymfonyStyle
         $middle();
 
         if (! $this->events) {
-            $runner($this->afterEvents);
+            $runner($this->afterWrite);
         }
     }
 }
