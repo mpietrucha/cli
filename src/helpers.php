@@ -1,15 +1,16 @@
 <?php
 
-use Mpietrucha\Cli\Cli;
+use Mpietrucha\Cli\Output;
+use Mpietrucha\Cli\Buffer;
 
-// if (! function_exists('cli')) {
-//     function cli(Closure $output): string {
-//         return Cli::create()->run($output);
-//     }
-// }
-//
-// if (! function_exists('output')) {
-//     function output(Closure $callback): mixed {
-//
-//     }
-// }
+if (! function_exists('output')) {
+    function output(): Output {
+        return Output::create();
+    }
+}
+
+if (! function_exists('buffer')) {
+    function buffer(Closure $callback, bool $skipSymfonyVarDumper = true): Buffer {
+        return Buffer::create($callback, $skipSymfonyVarDumper);
+    }
+}
