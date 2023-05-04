@@ -17,9 +17,9 @@ class Style extends SymfonyStyle
 
     protected ?string $prefix = null;
 
-    protected ?Closure $afterWrite = null;
+    protected array $afterWrite = [];
 
-    protected ?Closure $beforeWrite = null;
+    protected array $beforeWrite = [];
 
     public function __construct(InputInterface $input, OutputInterface $output)
     {
@@ -42,14 +42,14 @@ class Style extends SymfonyStyle
 
     public function beforeWrite(Closure $callback): self
     {
-        $this->beforeWrite = $callback;
+        $this->beforeWrite[] = $callback;
 
         return $this;
     }
 
     public function afterWrite(Closure $callback): self
     {
-        $this->afterWrite = $callback;
+        $this->afterWrite[] = $callback;
 
         return $this;
     }
@@ -87,18 +87,18 @@ class Style extends SymfonyStyle
 
     protected function events(Closure $middle): void
     {
+        $runner = fn (array $events) => collect($events)->tap(fn () => $this->events = true)->each(fn (Closure $event) => $event(
+            $this->type
+        ))->tap(fn () => $this->events = false);
+
         if (! $this->events) {
-            $this->events = true;
-
-            collect([$this->beforeWrite, $middle, $this->afterWrite])->filter()->each(fn (Closure $callback) => $callback(
-                $this->type
-            ));
-
-            return;
+            $runner($this->beforeWrite);
         }
 
         $middle();
 
-        $this->events = false;
+        if (! $this->events) {
+            $runner($this->afterEvents);
+        }
     }
 }
