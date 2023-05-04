@@ -11,6 +11,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class Style extends SymfonyStyle
 {
+    protected ?string $type = null;
+
     protected ?string $prefix = null;
 
     protected ?Closure $afterWrite = null;
@@ -52,6 +54,8 @@ class Style extends SymfonyStyle
 
     public function block(string|array $messages, string $type = null, string $style = null, string $prefix = ' ', bool $padding = false, bool $escape = true): void
     {
+        $this->type = $type;
+
         parent::block($messages, $this->prefix ?? $type, $style, $prefix, $padding, $escape);
     }
 
@@ -81,6 +85,8 @@ class Style extends SymfonyStyle
 
     protected function events(Closure $middle): void
     {
-        collect([$this->beforeWrite, $middle, $this->afterWrite])->filter()->each(fn (Closure $callback) => $callback());
+        collect([$this->beforeWrite, $middle, $this->afterWrite])->filter()->each(fn (Closure $callback) => $callback(
+            $this->type
+        ));
     }
 }
