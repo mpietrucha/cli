@@ -29,7 +29,7 @@ class Output
 
         $this->setStyle($this->defaultStyle());
 
-        $this->forwardTo($this->style)->forwardThenReturnThis();
+        $this->forwardTo($this->style())->forwardThenReturnThis();
     }
 
     public function __destruct()
@@ -49,9 +49,16 @@ class Output
         return $this;
     }
 
-    public function run(Closure $callback): self
+    public function style(): self
     {
-        value($callback, $this->style);
+        return $this->style;
+    }
+
+    public function with(string $prefix): self
+    {
+        $this->style()->prefix($prefix);
+
+        $this->style()->afterWrite(fn () => $this->style()->clearPrefix());
 
         return $this;
     }
