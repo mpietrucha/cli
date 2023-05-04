@@ -49,7 +49,7 @@ class Output
         return $this;
     }
 
-    public function style(): self
+    public function style(): SymfonyStyle
     {
         return $this->style;
     }
