@@ -32,6 +32,16 @@ class Buffer
         }, 1);
     }
 
+    public static function explode(string $delimiter): self
+    {
+        return self::create(fn (string $output) => $output . $delimiter);
+    }
+
+    public static function newLine(): self
+    {
+        return self::explode(PHP_EOL);
+    }
+
     public static function line():void
     {
         Waiting::wait(1);
