@@ -49,6 +49,13 @@ class Output
         return $this;
     }
 
+    public function run(Closure $callback): self
+    {
+        value($callback, $this->style);
+
+        return $this;
+    }
+
     public function end(): void
     {
         if ($this->end) {
