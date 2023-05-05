@@ -42,9 +42,11 @@ class Output
         return php_sapi_name() === 'cli';
     }
 
-    public function buffer(Closure $callback, bool $skipSymfonyVarDumper = true): self
+    public function buffer(Closure $callback, ?Closure $callback = null): self
     {
-        $this->buffer = Buffer::create($callback, $skipSymfonyVarDumper);
+        $this->buffer = Buffer::create($callback);
+
+        value($callback, $this->buffer);
 
         return $this;
     }
