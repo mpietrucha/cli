@@ -24,7 +24,7 @@ class Buffer
 
     public static function explode(string $delimiter): self
     {
-        return self::create(function (string $output) {
+        return self::create(function (string $output) use ($delimiter) {
             return "$output$delimiter";
         });
     }
