@@ -51,7 +51,7 @@ class Buffer
     public static function createWithAppend(?string $left = null, ?string $right = null): self
     {
         return self::create(function (string $output) use ($left, $right) {
-            return collect([$left, $output, $right])->toWord();
+            return collect([$left, $output, $right])->toWord()->toString();
         });
     }
 
