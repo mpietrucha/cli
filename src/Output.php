@@ -42,9 +42,9 @@ class Output
         return php_sapi_name() === 'cli';
     }
 
-    public function buffer(Closure $callback, ?Closure $callback = null): self
+    public function buffer(Closure $handler, ?Closure $callback = null): self
     {
-        $this->buffer = Buffer::create($callback);
+        $this->buffer = Buffer::create($handler);
 
         value($callback, $this->buffer);
 
