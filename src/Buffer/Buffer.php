@@ -139,7 +139,7 @@ class Buffer
             return $this->output->withRaw($output);
         }
 
-        if ($processed = value($this->callback, $output)) {
+        if (Types::string($processed = value($this->callback, $output))) {
             return $this->output->with($processed);
         }
 
