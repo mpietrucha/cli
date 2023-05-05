@@ -13,7 +13,7 @@ class Buffer
 
     protected bool $skipSymfonyVarDumper = true;
 
-    protected bool $skipMultilineStrings = true;
+    protected bool $skipMultilineStrings = false;
 
     protected const SYMFONY_VAR_DUMPER_INDICATOR = 'Sfdump';
 
@@ -31,7 +31,7 @@ class Buffer
 
     public static function newLine(): self
     {
-        return self::explode(PHP_EOL);
+        return self::explode(PHP_EOL)->skipMultilineStrings(true);
     }
 
     public static function line(): void
