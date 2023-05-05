@@ -1,7 +1,7 @@
 <?php
 
 use Mpietrucha\Cli\Output;
-use Mpietrucha\Cli\Buffer;
+use Mpietrucha\Cli\Buffer\Buffer;
 
 if (! function_exists('output')) {
     function output(): Output {
@@ -10,7 +10,7 @@ if (! function_exists('output')) {
 }
 
 if (! function_exists('buffer')) {
-    function buffer(Closure $callback, bool $skipSymfonyVarDumper = true): Buffer {
-        return Buffer::create($callback, $skipSymfonyVarDumper);
+    function buffer(Closure $callback): Buffer {
+        return Buffer::create($callback);
     }
 }

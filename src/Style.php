@@ -87,20 +87,21 @@ class Style extends SymfonyStyle
 
     protected function withEvents(Closure $middle): void
     {
-        $runner = function (array $events): void {
-            if ($this->events) {
-                return;
-            }
-
-            collect($events)->tap(fn () => $this->events = true)->each(fn (Closure $event) => $event(
-                $this->type
-            ))->tap(fn () => $this->events = false);
-        };
-
         collect([
-            fn () => $runner($this->beforeWrite),
+            fn () => $this->withEvent($this->beforeWrite),
             $middle,
-            fn () => $runner($this->afterWrite)
+            fn () => $this->withEvent($this->afterWrite)
         ])->each(fn (Closure $callback) => $callback());
+    }
+
+    protected function withEvent(array $events): void
+    {
+        if ($this->events) {
+            return;
+        }
+
+        collect($events)->tap(fn () => $this->events = true)->each(fn (Closure $event) => $event(
+            $this->type
+        ))->tap(fn () => $this->events = false);
     }
 }

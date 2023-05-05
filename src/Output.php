@@ -3,6 +3,7 @@
 namespace Mpietrucha\Cli;
 
 use Closure;
+use Mpietrucha\Cli\Buffer\Buffer;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Mpietrucha\Support\Concerns\HasFactory;
 use Mpietrucha\Support\Concerns\ForwardsCalls;
@@ -44,7 +45,7 @@ class Output
 
     public function buffer(Closure $handler, ?Closure $callback = null): self
     {
-        $this->buffer = Buffer::create($handler);
+        $this->buffer = Buffer::create($handler->bindTo($this));
 
         value($callback, $this->buffer);
 
@@ -80,7 +81,7 @@ class Output
         }
 
         $response = new Response(
-            with(new AnsiToHtmlConverter())->convert($this->output->fetch())
+            with(new AnsiToHtmlConverter)->convert($this->output->fetch())
         );
 
         $response->send();
