@@ -63,12 +63,12 @@ class Style extends SymfonyStyle
 
     public function write(string|iterable $messages, bool $newline = false, int $options = 0): void
     {
-        $this->events(fn () => parent::write($messages, $newline, $options));
+        $this->withEvents(fn () => parent::write($messages, $newline, $options));
     }
 
     public function writeln(string|iterable $messages, int $options = 0): void
     {
-        $this->events(fn () => parent::writeLn($messages, $options));
+        $this->withEvents(fn () => parent::writeLn($messages, $options));
     }
 
     public function definitionListWithSeparator(string|array ...$list): void
@@ -85,20 +85,22 @@ class Style extends SymfonyStyle
         return collect(['<href=', $url, '>', $anchor ?? $url, '</>'])->toWord();
     }
 
-    protected function events(Closure $middle): void
+    protected function withEvents(Closure $middle): void
     {
-        $runner = fn (array $events) => collect($events)->tap(fn () => $this->events = true)->each(fn (Closure $event) => $event(
-            $this->type
-        ))->tap(fn () => $this->events = false);
+        $runner = function (array $events): void {
+            if ($this->events) {
+                return;
+            }
 
-        if (! $this->events) {
-            $runner($this->beforeWrite);
-        }
+            collect($events)->tap(fn () => $this->events = true)->each(fn (Closure $event) => $event(
+                $this->type
+            ))->tap(fn () => $this->events = false);
+        };
 
-        $middle();
-
-        if (! $this->events) {
-            $runner($this->afterWrite);
-        }
+        collect([
+            fn () => $runner($this->beforeWrite),
+            $middle,
+            fn () => $runner($this->afterWrite)
+        ])->each(fn (Closure $callback) => $callback());
     }
 }
