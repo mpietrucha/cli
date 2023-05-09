@@ -4,22 +4,25 @@ namespace Mpietrucha\Cli;
 
 use Closure;
 use Mpietrucha\Support\Macro;
+use Mpietrucha\Support\Concerns\HasFactory;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Style extends SymfonyStyle
 {
+    use HasFactory;
+
     protected bool $events = false;
 
     protected ?string $type = null;
 
-    protected ?string $prefix = null;
-
     protected array $afterWrite = [];
 
     protected array $beforeWrite = [];
+
+    protected ?string $currentType = null;
 
     public function __construct(InputInterface $input, OutputInterface $output)
     {
@@ -28,16 +31,21 @@ class Style extends SymfonyStyle
         parent::__construct($input, $output);
     }
 
-    public function prefix(?string $prefix): self
+    public static function link(string $url, ?string $anchor = null): string
     {
-        $this->prefix = $prefix;
+        return collect(['<href=', $url, '>', $anchor ?? $url, '</>'])->toWord();
+    }
+
+    public function type(?string $type): self
+    {
+        $this->type = $type;
 
         return $this;
     }
 
-    public function clearPrefix(): self
+    public function withoutType(): self
     {
-        return $this->prefix(null);
+        return $this->type(null);
     }
 
     public function beforeWrite(Closure $callback): self
@@ -56,7 +64,7 @@ class Style extends SymfonyStyle
 
     public function block(string|array $messages, string $type = null, string $style = null, string $prefix = ' ', bool $padding = false, bool $escape = true): void
     {
-        $this->type = $type;
+        $this->currentType = $type;
 
         parent::block($messages, $this->prefix ?? $type, $style, $prefix, $padding, $escape);
     }
@@ -80,16 +88,11 @@ class Style extends SymfonyStyle
         parent::definitionList(...$list->toArray());
     }
 
-    public function link(string $url, ?string $anchor = null): string
-    {
-        return collect(['<href=', $url, '>', $anchor ?? $url, '</>'])->toWord();
-    }
-
-    protected function withEvents(Closure $middle): void
+    protected function withEvents(Closure $handler): void
     {
         collect([
             fn () => $this->withEvent($this->beforeWrite),
-            $middle,
+            $handler,
             fn () => $this->withEvent($this->afterWrite)
         ])->each(fn (Closure $callback) => $callback());
     }
@@ -101,7 +104,7 @@ class Style extends SymfonyStyle
         }
 
         collect($events)->tap(fn () => $this->events = true)->each(fn (Closure $event) => $event(
-            $this->type
+            $this->currentType
         ))->tap(fn () => $this->events = false);
     }
 }

@@ -24,7 +24,8 @@
         "symfony/console": "^6.2",
         "mpietrucha/laravel-macros": "^1.0",
         "sensiolabs/ansi-to-html": "^1.2",
-        "symfony/http-foundation": "^6.2"
+        "symfony/http-foundation": "^6.2",
+        "mpietrucha/error-raporting": "^1.0"
     },
     "require-dev": {
         "symfony/var-dumper": "^6.2"

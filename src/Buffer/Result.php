@@ -4,7 +4,7 @@ namespace Mpietrucha\Cli\Buffer;
 
 use Closure;
 
-class Output
+class Result
 {
     protected bool $touched = false;
 
@@ -14,7 +14,7 @@ class Output
 
     protected ?string $output = null;
 
-    public function flush(Closure $callback): self
+    public function flush(?Closure $callback = null): self
     {
         if (! $this->flushed()) {
             value($callback, $this);
@@ -42,14 +42,14 @@ class Output
         return $this->flushed;
     }
 
-    public function with(string $output): string
+    public function append(string $output): string
     {
         $this->output .= $output;
 
-        return $this->withRaw($output);
+        return $this->appendRaw($output);
     }
 
-    public function withRaw(string $output): string
+    public function appendRaw(string $output): string
     {
         $this->touch()->raw .= $output;
 

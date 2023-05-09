@@ -3,9 +3,9 @@
 namespace Mpietrucha\Cli\Buffer\Handlers;
 
 use Closure;
-use Mpietrucha\Cli\Factory\BufferHandler;
+use Mpietrucha\Cli\Buffer\Handler;
 
-class MultilineStringsHandler extends BufferHandler
+class MultilineStringsHandler extends Handler
 {
     public function handle(?string $output, Closure $next): ?string
     {

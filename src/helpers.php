@@ -1,11 +1,11 @@
 <?php
 
-use Mpietrucha\Cli\Output;
-use Mpietrucha\Cli\Buffer\Buffer;
+use Mpietrucha\Cli\Cli;
+use Mpietrucha\Cli\Buffer;
 
-if (! function_exists('output')) {
-    function output(): Output {
-        return Output::create();
+if (! function_exists('cli')) {
+    function cli(): Cli {
+        return Cli::create();
     }
 }
 
