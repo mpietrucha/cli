@@ -57,7 +57,9 @@ class Buffer
 
     protected static function handlers(): Collection
     {
-        return self::$handlers ??= collect(self::HANDLERS)->map(fn (string $handler) => new $handler);
+        return self::$handlers ??= collect(self::HANDLERS)->mapWithKeys(fn (string $handler) => [
+            $handler => new $handler
+        ]);
     }
 
     public function response(): ?string
