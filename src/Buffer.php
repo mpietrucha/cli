@@ -3,41 +3,44 @@
 namespace Mpietrucha\Cli;
 
 use Closure;
+use Exception;
 use Mpietrucha\Support\Macro;
-use Mpietrucha\Support\Types;
-use Mpietrucha\Support\Pipeline;
+use Illuminate\Support\Sleep;
+use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Cli\Buffer\Result;
+use Mpietrucha\Support\Pipeline;
 use Illuminate\Support\Collection;
 use Mpietrucha\Support\Concerns\HasFactory;
-use Mpietrucha\Cli\Concerns\BufferDefaultCreators;
 use Mpietrucha\Cli\Contracts\BufferHandlerInterface;
 use Mpietrucha\Cli\Buffer\Handlers\SymfonyVarDumperHandler;
-use Mpietrucha\Cli\Buffer\Handlers\MultilineStringsHandler;
+use Mpietrucha\Cli\Buffer\Handlers\ExplodeMultilineStringsHandler;
 
 class Buffer
 {
     use HasFactory;
 
-    use BufferDefaultCreators;
+    protected ?Collection $handlers = null;
 
-    protected ?Collection $active = null;
-
-    protected static ?Collection $handlers = null;
+    protected static ?array $configurator = null;
 
     protected const HANDLERS = [
-        MultilineStringsHandler::class,
-        SymfonyVarDumperHandler::class
+        SymfonyVarDumperHandler::class,
+        ExplodeMultilineStringsHandler::class,
     ];
 
-    public function __construct(protected ?Closure $callback = null, protected Result $result = new Result)
+    public function __construct(?Closure $callback = null, protected Result $result = new Result)
     {
         Macro::bootstrap();
+
+        $this->setCallback($callback)->configurator();
 
         ob_start($this->callback(...), 1);
 
         register_shutdown_function($this->flush(...));
 
-        $this->active()->each->init();
+        $this->handlers()->each->init();
+
+        self::$configurator = null;
     }
 
     public function __destruct()
@@ -45,71 +48,106 @@ class Buffer
         $this->flush();
     }
 
-    public static function between(): void
+    public static function configure(?Closure $configurator = null, array $arguments = []): self
     {
-        Waiting::wait(1);
+        self::$configurator = [$configurator, $arguments];
+
+        return self::create();
     }
 
-    public static function handler(BufferHandlerInterface $handler): void
+    public static function eol(): void
     {
-        self::handlers()->push($handler);
+        Sleep::for(1)->millisecond();
     }
 
-    public static function handlers(): Collection
+    public function setCallback(?Closure $callback): self
     {
-        return self::$handlers ??= collect(self::HANDLERS)->mapWithKeys(fn (string $handler) => [
+        if ($this->result->touched()) {
+            throw new Exception('Cannot set callback while buffer is already started');
+        }
+
+        $this->result->transformer($callback);
+
+        return $this;
+    }
+
+    public function handlers(): Collection
+    {
+        $this->handlers ??= collect(self::HANDLERS)->mapWithKeys(fn (string $handler) => [
             $handler => new $handler
         ]);
+
+        return $this->handlers->reject->disabled();
     }
 
-    public function response(): ?string
+    public function handler(BufferHandlerInterface $handler): self
     {
-        return $this->active()->map->response()->filter()->toWord();
+        $this->handlers()->push($handler);
+
+        return $this;
+    }
+
+    public function tty(bool $mode = true): self
+    {
+        $this->result->tty($mode);
+
+        return $this;
     }
 
     public function flush(): Result
     {
         return $this->result->flush(function () {
-            $this->active()->each->flushing();
-
             ob_end_flush();
 
-            $this->active()->each->flushed();
-
-            self::$handlers = null;
+            return $this->handlers()->map->flushing()->filter();
         });
     }
 
     protected function callback(string $output): string
     {
-        $handlers = $this->active()->when(! $this->result->touched(), function (Collection $handlers) {
-            $handlers->each->touch();
-        });
-
-        if (! $output) {
-            return $this->result->appendRaw($output);
-        }
-
-        $passToCallback = Pipeline::create()
-            ->send($output)
-            ->through($handlers->toArray())
-            ->thenReturn();
-
-        if (! $passToCallback) {
-            return $this->result->appendRaw($output);
-        }
-
-        if (Types::string($processed = value($this->callback, $output))) {
-            return $this->result->append($processed);
-        }
-
-        $this->result->appendRaw($output);
+        $this->lines($output);
 
         return '';
     }
 
-    protected function active(): Collection
+    protected function lines(string $output): void
     {
-        return $this->active ??= self::handlers()->reject->disabled();
+        if (! $output) {
+            return;
+        }
+
+        $entry = Entry::create($output);
+
+        if (! $this->handlers()->count()) {
+            $this->result->entry($entry);
+
+            return;
+        }
+
+        $handlers = $this->handlers()->when(! $this->result->touched(), function (Collection $handlers) {
+            $handlers->each->touch();
+        });
+
+        $this->result->entry(Pipeline::create()
+            ->send($entry)
+            ->through($handlers->toArray())
+            ->thenReturn());
+    }
+
+    protected function configurator(): void
+    {
+        if (! self::$configurator) {
+            return;
+        }
+
+        [$configurator, $arguments] = self::$configurator;
+
+        $callback = value($configurator->bindTo($this), ...$arguments);
+
+        if (! $callback instanceof Closure) {
+            return;
+        }
+
+        $this->setCallback($callback);
     }
 }

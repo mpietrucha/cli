@@ -10,7 +10,7 @@ if (! function_exists('cli')) {
 }
 
 if (! function_exists('buffer')) {
-    function buffer(Closure $callback): Buffer {
-        return Buffer::create($callback);
+    function buffer(?Closure $configurator = null): Buffer {
+        return Buffer::configure($configurator);
     }
 }

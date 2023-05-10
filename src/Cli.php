@@ -5,13 +5,13 @@ namespace Mpietrucha\Cli;
 use Closure;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Console\Input\ArrayInput;
 use Mpietrucha\Support\Concerns\HasFactory;
 use Mpietrucha\Support\Concerns\ForwardsCalls;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Cli
@@ -20,29 +20,37 @@ class Cli
 
     use ForwardsCalls;
 
-    protected bool $end = false;
+    protected SymfonyStyle $style;
+
+    protected InputInterface $input;
+
+    protected OutputInterface $output;
+
+    protected bool $finished = false;
 
     protected ?Buffer $buffer = null;
 
-    public function __construct()
+    public function __construct(array $input = [])
     {
-        $this->setInput(new ArrayInput([]));
+        $this->setInput($this->defaultInput($input));
 
         $this->setOutput($this->defaultOutput());
 
         $this->setStyle($this->defaultStyle());
 
         $this->forwardTo($this->style())->forwardThenReturnThis();
+
+        register_shutdown_function($this->finish(...));
     }
 
     public function __destruct()
     {
-        $this->end();
+        $this->finish();
     }
 
     public static function inside(): bool
     {
-        return php_sapi_name() === 'cli';
+        return \PHP_SAPI === 'cli' || \PHP_SAPI === 'phpdbg';
     }
 
     public function setInput(InputInterface $input): self
@@ -66,18 +74,23 @@ class Cli
         return $this;
     }
 
+    public function setBuffer(Buffer $buffer): self
+    {
+        $this->buffer = $buffer;
+
+        return $this;
+    }
+
     public function style(): SymfonyStyle
     {
         return $this->style;
     }
 
-    public function buffer(Closure $handler, ?Closure $callback = null): self
+    public function buffer(Closure $configurator): self
     {
-        $this->buffer = Buffer::create($handler->bindTo($this));
+        $buffer = Buffer::configure($configurator, [$this]);
 
-        value($callback, $this->buffer);
-
-        return $this;
+        return $this->setBuffer($buffer);
     }
 
     public function type(string $type): self
@@ -89,34 +102,33 @@ class Cli
         return $this;
     }
 
-    public function end(): void
+    public function finish(): void
     {
-        if ($this->end) {
+        if ($this->finished) {
             return;
         }
 
-        $this->end = true;
+        $this->finished = true;
 
         $this->buffer?->flush();
 
         if (self::inside()) {
             return;
         }
+    }
 
-        $response = new Response(
-            with(new AnsiToHtmlConverter)->convert($this->output->fetch()) . $this->buffer->response()
-        );
-
-        $response->send();
+    protected function defaultInput(array $input): InputInterface
+    {
+        return new ArrayInput($input);
     }
 
     protected function defaultOutput(): OutputInterface
     {
-        if (self::inside()) {
-            return new ConsoleOutput;
+        if (! self::inside()) {
+            return new BufferedOutput(OutputInterface::VERBOSITY_NORMAL, true);
         }
 
-        return new BufferedOutput(OutputInterface::VERBOSITY_NORMAL, true);
+        return new ConsoleOutput;
     }
 
     protected function defaultStyle(): SymfonyStyle

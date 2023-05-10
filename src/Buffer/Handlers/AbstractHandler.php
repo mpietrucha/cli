@@ -1,11 +1,13 @@
 <?php
 
-namespace Mpietrucha\Cli\Buffer;
+namespace Mpietrucha\Cli\Buffer\Handlers;
 
 use Closure;
+use Mpietrucha\Cli\Buffer\Entry;
+use Mpietrucha\Cli\Buffer\Line;
 use Mpietrucha\Cli\Contracts\BufferHandlerInterface;
 
-abstract class Handler implements BufferHandlerInterface
+abstract class AbstractHandler implements BufferHandlerInterface
 {
     protected bool $disabled = false;
 
@@ -27,21 +29,13 @@ abstract class Handler implements BufferHandlerInterface
     {
     }
 
-    public function flushing(): void
-    {
-    }
-
-    public function flushed(): void
-    {
-    }
-
-    public function response(): ?string
+    public function flushing(): ?Line
     {
         return null;
     }
 
-    public function handle(?string $output, Closure $next): ?string
+    public function handle(Entry $entry, Closure $next): Entry
     {
-        return $next($output);
+        return $next($entry);
     }
 }

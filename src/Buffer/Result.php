@@ -1,40 +1,67 @@
 <?php
 
-namespace Mpietrucha\Cli\Buffer;
+ namespace Mpietrucha\Cli\Buffer;
 
 use Closure;
+use Mpietrucha\Support\Types;
+ use Illuminate\Support\Stringable;
+ use Illuminate\Support\Collection;
+ use Mpietrucha\Support\Argument;
 
 class Result
 {
-    protected bool $touched = false;
+    protected bool $tty = true;
 
     protected bool $flushed = false;
 
-    protected ?string $raw = null;
+    protected ?Closure $transformer = null;
 
-    protected ?string $output = null;
-
-    public function flush(?Closure $callback = null): self
+    public function __construct(protected Collection $entries = new Collection)
     {
-        if (! $this->flushed()) {
-            value($callback, $this);
+    }
+
+    public function tty(bool $mode): self
+    {
+        $this->tty = $mode;
+
+        return $this;
+    }
+
+    public function flush(Closure $callback): self
+    {
+        if ($this->flushed()) {
+            return $this;
         }
 
-        $this->flushed = true;
+        $lines = $callback();
+
+        if ($lines instanceof Collection) {
+            $this->entry(Entry::fromCollection($lines));
+        }
+
+        if ($this->tty) {
+            $this->output()->each(function (Closure $line) {
+                echo value($line);
+            });
+        }
+
+        $this->flushed  = true;
 
         return $this;
     }
 
-    public function touch(): self
+    public function entry(Entry $entry): self
     {
-        $this->touched = true;
+        $this->entries->push($entry);
 
         return $this;
     }
 
-    public function touched(): bool
+    public function transformer(?Closure $transformer): self
     {
-        return $this->touched;
+        $this->transformer = $transformer;
+
+        return $this;
     }
 
     public function flushed(): bool
@@ -42,27 +69,31 @@ class Result
         return $this->flushed;
     }
 
-    public function append(string $output): string
+    public function touched(): bool
     {
-        $this->output .= $output;
-
-        return $this->appendRaw($output);
+        return $this->entries->count();
     }
 
-    public function appendRaw(string $output): string
+    public function output(): Collection
     {
-        $this->touch()->raw .= $output;
-
-        return $output;
+        return $this->entries->map($this->outputEntry(...))->flatten();
     }
 
-    public function output(): ?string
+    protected function outputEntry(Entry $entry): Collection
     {
-        return $this->output;
+        return $entry->lines()->map($this->outputLine(...))->filter();
     }
 
-    public function raw(): ?string
+    protected function outputLine(Line $line): Closure
     {
-        return $this->raw;
+        if (! $this->transformer || ! $line->shuldBePassedToCallback()) {
+            return fn () => $line->get();
+        }
+
+        return function () use ($line): string {
+            $line = value($this->transformer, $line->get());
+
+            return Argument::create($line)->whenNotString(fn () => '')->value();
+        };
     }
 }

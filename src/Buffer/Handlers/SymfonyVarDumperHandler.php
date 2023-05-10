@@ -2,28 +2,25 @@
 
 namespace Mpietrucha\Cli\Buffer\Handlers;
 
+use Closure;
 use Mpietrucha\Cli\Cli;
-use Mpietrucha\Support\Types;
+use Mpietrucha\Cli\Buffer\Line;
+use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Support\Resource;
 use Mpietrucha\Support\Condition;
-use Mpietrucha\Cli\Buffer\Handler;
 use Symfony\Component\VarDumper\VarDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 
-class SymfonyVarDumperHandler extends Handler
+class SymfonyVarDumperHandler extends AbstractHandler
 {
     protected bool $ignore = false;
 
-    protected ?string $response = null;
-
     protected ?Resource $saved = null;
 
-    public function ignore(): self
+    public function ignore(): void
     {
         $this->ignore = true;
-
-        return $this;
     }
 
     public function init(): void
@@ -37,13 +34,13 @@ class SymfonyVarDumperHandler extends Handler
         $this->setOutput(Resource::create());
     }
 
-    public function flushed(): void
+    public function flushing(): ?Line
     {
         if (! $this->saved) {
-            return;
+            return null;
         }
 
-        $output = $this->getCurrentOutput();
+        $line = $this->line();
 
         VarDumper::setHandler(null);
 
@@ -51,24 +48,39 @@ class SymfonyVarDumperHandler extends Handler
 
         $this->setDefaultColors(null);
 
-        if ($this->ignore) {
-            return;
+        return $line;
+    }
+
+    public function handle(Entry $entry, Closure $next): Entry
+    {
+        $entry = $next($entry);
+
+        if (! $line = $this->line()) {
+            return $entry;
         }
+
+        return $entry->prepend($line);
+    }
+
+    protected function line(): ?Line
+    {
+        if ($this->ignore) {
+            return null;
+        }
+
+        $output = $this->getCurrentOutput();
 
         $output->rewind();
 
-        if (! Cli::inside()) {
-            $this->response = $output->getContents();
-
-            return;
+        if (! $output = $output->iterateContents(0)) {
+            return null;
         }
 
-        $this->saved->write($output->getContents());
-    }
+        $line = Line::create($output);
 
-    public function response(): ?string
-    {
-        return $this->response;
+        $line->shuldBePassedToCallback(false);
+
+        return $line;
     }
 
     protected function setOutput(Resource $resource): void

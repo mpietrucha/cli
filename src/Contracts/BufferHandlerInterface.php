@@ -3,6 +3,8 @@
 namespace Mpietrucha\Cli\Contracts;
 
 use Closure;
+use Mpietrucha\Cli\Buffer\Line;
+use Mpietrucha\Cli\Buffer\Entry;
 
 interface BufferHandlerInterface
 {
@@ -14,11 +16,7 @@ interface BufferHandlerInterface
 
     public function touch(): void;
 
-    public function flushing(): void;
+    public function flushing(): ?Line;
 
-    public function flushed(): void;
-
-    public function response(): ?string;
-
-    public function handle(?string $output, Closure $next): ?string;
+    public function handle(Entry $entry, Closure $next): Entry;
 }
