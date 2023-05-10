@@ -4,6 +4,7 @@ namespace Mpietrucha\Cli\Buffer\Handlers;
 
 use Closure;
 use Mpietrucha\Cli\Cli;
+use Mpietrucha\Support\Types;
 use Mpietrucha\Cli\Buffer\Line;
 use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Support\Resource;
@@ -14,13 +15,20 @@ use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 
 class SymfonyVarDumperHandler extends AbstractHandler
 {
+    protected ?Resource $saved = null;
+
     protected bool $ignore = false;
 
-    protected ?Resource $saved = null;
+    protected ?bool $supportsColors = null;
 
     public function ignore(): void
     {
         $this->ignore = true;
+    }
+
+    public function supportsColors(?bool $mode = true): self
+    {
+        $this->supportsColors = $mode;
     }
 
     public function init(): void
@@ -95,6 +103,10 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     protected function getSupportsColors(): bool
     {
+        if (! Types::null($this->supportsColors)) {
+            return $this->supportsColors;
+        }
+
         $handler = $this->handler();
 
         return invade(new $handler)->supportsColors();
