@@ -50,6 +50,7 @@ class Buffer
 
     public static function configure(?Closure $configurator = null, array $arguments = []): self
     {
+
         self::$configurator = [$configurator, $arguments];
 
         return self::create();
