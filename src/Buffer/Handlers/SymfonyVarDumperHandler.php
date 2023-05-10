@@ -25,7 +25,7 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     protected ?bool $supportsColors = null;
 
-    protected ?string $encryptIndicator = null;
+    protected string $encryptIndicator = self::ENCRYPT_INDICATOR;
 
     protected const ENCRYPT_INDICATOR = '__dump__';
 
@@ -41,9 +41,16 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     public function encrypt(?string $indicator = null): void
     {
-        $this->encrypt = true;
+        if ($indicator) {
+            $this->encryptIndicator($indicator);
+        }
 
-        $this->encryptIndicator = $indicator ?? self::ENCRYPT_INDICATOR;
+        $this->encrypt = true;
+    }
+
+    public function encryptIndicator(string $indicator): void
+    {
+        $this->encryptIndicator = $indicator;
     }
 
     public function init(): void
