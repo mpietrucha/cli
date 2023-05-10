@@ -23,7 +23,7 @@ class Line
         return $this->line;
     }
 
-    public function shuldBePassedToCallback(?bool $mode = null): bool
+    public function shouldBePassedToCallback(?bool $mode = null): bool
     {
         if ($mode !== null) {
             $this->callback = $mode;

@@ -86,7 +86,7 @@ class Result
 
     protected function outputLine(Line $line): Closure
     {
-        if (! $this->transformer || ! $line->shuldBePassedToCallback()) {
+        if (! $this->transformer || ! $line->shouldBePassedToCallback()) {
             return fn () => $line->get();
         }
 

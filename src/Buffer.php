@@ -142,7 +142,7 @@ class Buffer
 
         [$configurator, $arguments] = self::$configurator;
 
-        $callback = value($configurator->bindTo($this), ...$arguments);
+        $callback = value($configurator?->bindTo($this), ...$arguments);
 
         if (! $callback instanceof Closure) {
             return;
