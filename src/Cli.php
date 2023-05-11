@@ -109,7 +109,7 @@ class Cli
             throw new Exception('Provide valid configurator callback to create buffer');
         }
 
-        return $this->buffer($configurator);
+        return $this->buffer($configurator)->getBuffer();
     }
 
     public function type(string $type): self
