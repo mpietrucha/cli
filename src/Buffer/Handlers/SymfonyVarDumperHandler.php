@@ -9,7 +9,6 @@ use Mpietrucha\Support\Base64;
 use Mpietrucha\Cli\Buffer\Line;
 use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Support\Resource;
-use Mpietrucha\Support\Condition;
 use Illuminate\Support\Collection;
 use Symfony\Component\VarDumper\VarDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
@@ -17,17 +16,26 @@ use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 
 class SymfonyVarDumperHandler extends AbstractHandler
 {
+    protected ?array $copy = null;
+
     protected bool $ignore = false;
 
     protected bool $encrypt = false;
 
-    protected ?Resource $saved = null;
-
     protected ?bool $supportsColors = null;
 
-    protected string $encryptIndicator = self::ENCRYPT_INDICATOR;
+    protected string $encryptIndicator = self::DEFAULT_ENCRYPT_INDICATOR;
 
-    protected const ENCRYPT_INDICATOR = '__dump__';
+    protected const DEFAULT_ENCRYPT_INDICATOR = '__dump__';
+
+    public function __construct(protected Resource $output = new Resource)
+    {
+    }
+
+    public function output(Resource $output): void
+    {
+        $this->output = $output;
+    }
 
     public function ignore(): void
     {
@@ -55,26 +63,22 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     public function init(): void
     {
-        if (! $this->saved = $this->getCurrentOutput()) {
+        if (! $this->copy()) {
             return;
         }
 
         $this->setDefaultColors($this->getSupportsColors());
 
-        $this->setOutput(Resource::create());
+        $this->setOutput($this->output);
     }
 
     public function flushing(): ?Line
     {
-        if (! $this->saved) {
-            return null;
-        }
-
         $line = $this->line();
 
-        VarDumper::setHandler(null);
-
-        $this->setOutput($this->saved);
+        if (! $this->restore()) {
+            return null;
+        }
 
         $this->setDefaultColors(null);
 
@@ -96,23 +100,49 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     protected function line(): ?Line
     {
+        $output = $this->getCurrentOutput();
+
         if ($this->ignore) {
             return null;
         }
-
-        $output = $this->getCurrentOutput();
-
-        $output->rewind();
 
         if (! $output = $output->iterateContents(0)) {
             return null;
         }
 
-        $line = Line::create($this->build($output));
+        $line = Line::create(
+            $this->build($output)
+        );
 
         $line->shouldBePassedToCallback(false);
 
         return $line;
+    }
+
+    protected function copy(): bool
+    {
+        if (! $output = $this->getCurrentOutput()) {
+            return false;
+        }
+
+        $this->copy = [$output, VarDumper::setHandler(null)];
+
+        return true;
+    }
+
+    protected function restore(): bool
+    {
+        [$output, $handler] = $this->copy ?? [null, null];
+
+        if (! $output) {
+            return false;
+        }
+
+        VarDumper::setHandler($handler);
+
+        $this->setOutput($output);
+
+        return true;
     }
 
     protected function setOutput(Resource $resource): void
@@ -145,7 +175,7 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     protected function handler(): string
     {
-        return Condition::create(CliDumper::class)->add(HtmlDumper::class, ! Cli::inside())->resolve();
+        return [CliDumper::class, HtmlDumper::class][! Cli::inside()];
     }
 
     protected function build(string $output): string

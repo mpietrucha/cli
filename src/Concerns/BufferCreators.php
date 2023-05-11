@@ -3,6 +3,7 @@
 namespace Mpietrucha\Cli\Concerns;
 
 use Closure;
+use Mpietrucha\Cli\Buffer\Handlers\SymfonyVarDumperHandler;
 
 trait BufferCreators
 {
@@ -16,5 +17,14 @@ trait BufferCreators
     public static function createWithNewLine(?Closure $configurator = null): self
     {
         return self::createWithDelimiter(PHP_EOL, $configurator);
+    }
+
+    public static function createWithoutSymfonyVarDumper(?Closure $callback = null): self
+    {
+        return self::configure(function () use ($callback) {
+            $this->handlers()->get(SymfonyVarDumperHandler::class)->ignore();
+
+            return $callback;
+        });
     }
 }

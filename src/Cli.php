@@ -3,6 +3,7 @@
 namespace Mpietrucha\Cli;
 
 use Closure;
+use Mpietrucha\Support\Condition;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -26,9 +27,13 @@ class Cli
 
     protected OutputInterface $output;
 
+    protected bool $convert = true;
+
     protected bool $finished = false;
 
     protected ?Buffer $buffer = null;
+
+    protected bool $shouldRespond = false;
 
     public function __construct(array $input = [])
     {
@@ -95,17 +100,34 @@ class Cli
 
     public function type(string $type): self
     {
-        $this->style()->type($type);
-
-        $this->style()->afterWrite(fn () => $this->style()->withoutType());
+        $this->style()->type($type)->afterWrite(fn () => $this->style()->withoutType());
 
         return $this;
     }
 
-    public function finish(): void
+    public function shouldRespond(bool $mode = true): self
+    {
+        $this->shouldRespond = $mode;
+
+        return $this;
+    }
+
+    public function convert(bool $mode = true): self
+    {
+        $this->convert = $mode;
+
+        return $this;
+    }
+
+    public function raw(): self
+    {
+        return $this->convert(false);
+    }
+
+    public function finish(): ?Response
     {
         if ($this->finished) {
-            return;
+            return null;
         }
 
         $this->finished = true;
@@ -113,8 +135,22 @@ class Cli
         $this->buffer?->flush();
 
         if (self::inside()) {
-            return;
+            return null;
         }
+
+        $contents = $this->output->fetch();
+
+        $response = new Response(
+            Condition::create($contents)->add(function () use ($contents) {
+                return with(new AnsiToHtmlConverter)->convert($contents);
+            }, $this->convert)->resolve()
+        );
+
+        if ($this->shouldRespond) {
+            $response->send();
+        }
+
+        return $response;
     }
 
     protected function defaultInput(array $input): InputInterface
