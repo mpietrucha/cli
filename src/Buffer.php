@@ -10,6 +10,7 @@ use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Cli\Buffer\Result;
 use Mpietrucha\Support\Pipeline;
 use Illuminate\Support\Collection;
+use Mpietrucha\Cli\Concerns\BufferCreators;
 use Mpietrucha\Support\Concerns\HasFactory;
 use Mpietrucha\Cli\Contracts\BufferHandlerInterface;
 use Mpietrucha\Cli\Buffer\Handlers\SymfonyVarDumperHandler;
@@ -18,6 +19,8 @@ use Mpietrucha\Cli\Buffer\Handlers\ExplodeMultilineStringsHandler;
 class Buffer
 {
     use HasFactory;
+
+    use BufferCreators;
 
     protected ?Collection $handlers = null;
 
