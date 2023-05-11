@@ -3,6 +3,7 @@
 namespace Mpietrucha\Cli;
 
 use Closure;
+use Exception;
 use Mpietrucha\Support\Condition;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Component\HttpFoundation\Response;
@@ -96,6 +97,19 @@ class Cli
         $buffer = Buffer::configure($configurator, [$this]);
 
         return $this->setBuffer($buffer);
+    }
+
+    public function getBuffer(?Closure $configurator = null): ?Buffer
+    {
+        if ($this->buffer) {
+            return $this->buffer;
+        }
+
+        if (! $configurator) {
+            throw new Exception('Provide valid configurator callback to create buffer');
+        }
+
+        return $this->buffer($configurator);
     }
 
     public function type(string $type): self
