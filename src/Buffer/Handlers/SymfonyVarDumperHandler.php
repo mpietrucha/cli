@@ -47,6 +47,17 @@ class SymfonyVarDumperHandler extends AbstractHandler
         $this->supportsColors = $mode;
     }
 
+    public function getSupportsColors(): bool
+    {
+        if (! Types::null($this->supportsColors)) {
+            return $this->supportsColors;
+        }
+
+        $handler = $this->handler();
+
+        return invade(new $handler)->supportsColors();
+    }
+
     public function encrypt(?string $indicator = null): void
     {
         if ($indicator) {
@@ -153,17 +164,6 @@ class SymfonyVarDumperHandler extends AbstractHandler
     protected function setDefaultColors(?bool $defaultColors): void
     {
         $this->handler()::$defaultColors = $defaultColors;
-    }
-
-    protected function getSupportsColors(): bool
-    {
-        if (! Types::null($this->supportsColors)) {
-            return $this->supportsColors;
-        }
-
-        $handler = $this->handler();
-
-        return invade(new $handler)->supportsColors();
     }
 
     protected function getCurrentOutput(): ?Resource
