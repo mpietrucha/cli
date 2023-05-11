@@ -99,7 +99,7 @@ class Cli
         return $this->setBuffer($buffer);
     }
 
-    public function getBuffer(?Closure $configurator = null): ?Buffer
+    public function getBuffer(?Closure $configurator = null): Buffer
     {
         if ($this->buffer) {
             return $this->buffer;
