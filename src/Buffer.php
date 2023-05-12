@@ -76,7 +76,7 @@ class Buffer
 
     public function handlers(): Collection
     {
-        $this->handlers ??= collect(self::HANDLERS)->mapToInstance();
+        $this->handlers ??= collect(self::HANDLERS)->mapWithKeysToInstance();
 
         return $this->handlers->reject->disabled();
     }
