@@ -5,41 +5,35 @@ namespace Mpietrucha\Cli\Buffer\Handlers;
 use Closure;
 use Mpietrucha\Cli\Cli;
 use Mpietrucha\Support\Types;
-use Mpietrucha\Support\Base64;
 use Mpietrucha\Cli\Buffer\Line;
 use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Support\Resource;
-use Illuminate\Support\Collection;
+use Mpietrucha\Cli\Concerns\BufferHandlerIsIgnorable;
+use Mpietrucha\Cli\Concerns\BufferHandlerIsEncryptable;
 use Symfony\Component\VarDumper\VarDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 
 class SymfonyVarDumperHandler extends AbstractHandler
 {
+    use BufferHandlerIsIgnorable;
+
+    use BufferHandlerIsEncryptable;
+
     protected ?array $copy = null;
 
-    protected bool $ignore = false;
-
-    protected bool $encrypt = false;
-
     protected ?bool $supportsColors = null;
-
-    protected string $encryptIndicator = self::DEFAULT_ENCRYPT_INDICATOR;
 
     protected const DEFAULT_ENCRYPT_INDICATOR = '__dump__';
 
     public function __construct(protected Resource $output = new Resource)
     {
+        $this->encryptableIndicator(self::DEFAULT_ENCRYPT_INDICATOR);
     }
 
     public function output(Resource $output): void
     {
         $this->output = $output;
-    }
-
-    public function ignore(): void
-    {
-        $this->ignore = true;
     }
 
     public function supportsColors(?bool $mode = true): void
@@ -56,20 +50,6 @@ class SymfonyVarDumperHandler extends AbstractHandler
         $handler = $this->handler();
 
         return invade(new $handler)->supportsColors();
-    }
-
-    public function encrypt(?string $indicator = null): void
-    {
-        if ($indicator) {
-            $this->encryptIndicator($indicator);
-        }
-
-        $this->encrypt = true;
-    }
-
-    public function encryptIndicator(string $indicator): void
-    {
-        $this->encryptIndicator = $indicator;
     }
 
     public function init(): void
@@ -122,7 +102,7 @@ class SymfonyVarDumperHandler extends AbstractHandler
         }
 
         $line = Line::create(
-            $this->build($output)
+            $this->encrypt($output)
         );
 
         $line->shouldBePassedToCallback(false);
@@ -176,37 +156,5 @@ class SymfonyVarDumperHandler extends AbstractHandler
     protected function handler(): string
     {
         return [CliDumper::class, HtmlDumper::class][! Cli::inside()];
-    }
-
-    protected function build(string $output): string
-    {
-        if (! $this->encrypt) {
-            return $output;
-        }
-
-        return collect([
-            $this->encryptIndicator, Base64::encode($output), $this->encryptIndicator
-        ])->toWord();
-    }
-
-    protected function decrypt(Line $line): Collection|Line
-    {
-        if (! $line->get()->contains($this->encryptIndicator)) {
-            return $line;
-        }
-
-        $hits = $line->get()->toBetweenCollection($this->encryptIndicator);
-
-        $line = $line->get()->remove([
-            ...$hits, $this->encryptIndicator
-        ]);
-
-        $hits = $hits->map(fn (string $hit) => Base64::decode($hit))->mapInto(Line::class)->tap(function (Collection $lines) {
-            $lines->each->shouldBePassedToCallback(false);
-        });
-
-        return collect([
-            Line::create($line), ...$hits
-        ]);
     }
 }

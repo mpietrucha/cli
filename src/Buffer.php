@@ -42,8 +42,6 @@ class Buffer
         register_shutdown_function($this->flush(...));
 
         $this->handlers()->each->init();
-
-        self::$configurator = null;
     }
 
     public function __destruct()
@@ -76,7 +74,7 @@ class Buffer
 
     public function handlers(): Collection
     {
-        $this->handlers ??= collect(self::HANDLERS)->mapToInstanceWithKeys();
+        $this->handlers ??= collect(self::HANDLERS)->mapIntoInstanceWithKeys();
 
         return $this->handlers->reject->disabled();
     }
@@ -98,7 +96,9 @@ class Buffer
     public function flush(): Result
     {
         return $this->result->flush(function () {
-            ob_end_flush();
+            if (ob_get_length()) {
+                ob_end_flush();
+            }
 
             return $this->handlers()->map->flushing()->filter();
         });
@@ -150,5 +150,7 @@ class Buffer
         }
 
         $this->setCallback($callback);
+
+        self::$configurator = null;
     }
 }
