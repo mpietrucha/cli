@@ -4,6 +4,7 @@ namespace Mpietrucha\Cli;
 
 use Closure;
 use Exception;
+use Mpietrucha\Support\Error;
 use Mpietrucha\Support\Condition;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Component\HttpFoundation\Response;
@@ -83,6 +84,13 @@ class Cli
     public function setBuffer(Buffer $buffer): self
     {
         $this->buffer = $buffer;
+
+        return $this;
+    }
+
+    public function withErrorHandler(): self
+    {
+        Error::create()->cli();
 
         return $this;
     }
