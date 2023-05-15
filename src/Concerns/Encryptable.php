@@ -6,7 +6,7 @@ use Mpietrucha\Support\Base64;
 use Illuminate\Support\Collection;
 use Mpietrucha\Cli\Buffer\Line;
 
-trait BufferHandlerIsEncryptable
+trait Encryptable
 {
     protected bool $encryptable = false;
 

@@ -2,7 +2,7 @@
 
 namespace Mpietrucha\Cli\Concerns;
 
-trait BufferHandlerIsIgnorable
+trait Ignorable
 {
     protected bool $ignore = false;
 

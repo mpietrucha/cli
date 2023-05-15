@@ -5,7 +5,7 @@ namespace Mpietrucha\Cli\Concerns;
 use Closure;
 use Mpietrucha\Cli\Buffer\Handlers\SymfonyVarDumperHandler;
 
-trait BufferCreators
+trait Creators
 {
     public static function createWithDelimiter(string $delimiter, ?Closure $configurator = null): self
     {

@@ -8,17 +8,17 @@ use Mpietrucha\Support\Types;
 use Mpietrucha\Cli\Buffer\Line;
 use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Support\Resource;
-use Mpietrucha\Cli\Concerns\BufferHandlerIsIgnorable;
-use Mpietrucha\Cli\Concerns\BufferHandlerIsEncryptable;
+use Mpietrucha\Cli\Concerns\Ignorable;
+use Mpietrucha\Cli\Concerns\Encryptable;
 use Symfony\Component\VarDumper\VarDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper;
 
 class SymfonyVarDumperHandler extends AbstractHandler
 {
-    use BufferHandlerIsIgnorable;
+    use Ignorable;
 
-    use BufferHandlerIsEncryptable;
+    use Encryptable;
 
     protected ?array $copy = null;
 
@@ -58,9 +58,9 @@ class SymfonyVarDumperHandler extends AbstractHandler
             return;
         }
 
-        $this->setDefaultColors($this->getSupportsColors());
+        $this->setHandlerDefaultColors($this->getSupportsColors());
 
-        $this->setOutput($this->output);
+        $this->setHandlerOutput($this->output);
     }
 
     public function flushing(): ?Line
@@ -71,7 +71,7 @@ class SymfonyVarDumperHandler extends AbstractHandler
             return null;
         }
 
-        $this->setDefaultColors(null);
+        $this->setHandlerDefaultColors(null);
 
         return $line;
     }
@@ -91,13 +91,13 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     protected function line(): ?Line
     {
-        $output = $this->getCurrentOutput();
-
         if ($this->ignore) {
             return null;
         }
 
-        if (! $output = $output->iterateContents(0)) {
+        $output = $this->output->iterateContents(0);
+
+        if (! $output) {
             return null;
         }
 
@@ -112,7 +112,7 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     protected function copy(): bool
     {
-        if (! $output = $this->getCurrentOutput()) {
+        if (! $output = $this->getHandlerOutput()) {
             return false;
         }
 
@@ -131,22 +131,22 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
         VarDumper::setHandler($handler);
 
-        $this->setOutput($output);
+        $this->setHandlerOutput($output);
 
         return true;
     }
 
-    protected function setOutput(Resource $resource): void
-    {
-        $this->handler()::$defaultOutput = $resource->stream();
-    }
-
-    protected function setDefaultColors(?bool $defaultColors): void
+    protected function setHandlerDefaultColors(?bool $defaultColors): void
     {
         $this->handler()::$defaultColors = $defaultColors;
     }
 
-    protected function getCurrentOutput(): ?Resource
+    protected function setHandlerOutput(Resource $resource): void
+    {
+        $this->handler()::$defaultOutput = $resource->stream();
+    }
+
+    protected function getHandlerOutput(): ?Resource
     {
         $output = $this->handler()::$defaultOutput;
 

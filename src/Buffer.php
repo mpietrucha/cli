@@ -10,7 +10,7 @@ use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Cli\Buffer\Result;
 use Mpietrucha\Support\Pipeline;
 use Illuminate\Support\Collection;
-use Mpietrucha\Cli\Concerns\BufferCreators;
+use Mpietrucha\Cli\Concerns\Creators;
 use Mpietrucha\Support\Concerns\HasFactory;
 use Mpietrucha\Cli\Contracts\BufferHandlerInterface;
 use Mpietrucha\Cli\Buffer\Handlers\SymfonyVarDumperHandler;
@@ -20,7 +20,7 @@ class Buffer
 {
     use HasFactory;
 
-    use BufferCreators;
+    use Creators;
 
     protected ?Collection $handlers = null;
 
@@ -96,9 +96,7 @@ class Buffer
     public function flush(): Result
     {
         return $this->result->flush(function () {
-            if (ob_get_length()) {
-                ob_end_flush();
-            }
+            ob_end_flush();
 
             return $this->handlers()->map->flushing()->filter();
         });
