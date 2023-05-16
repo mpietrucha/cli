@@ -7,12 +7,16 @@ use Mpietrucha\Cli\Cli;
 use Mpietrucha\Support\Types;
 use Mpietrucha\Cli\Buffer\Line;
 use Mpietrucha\Cli\Buffer\Entry;
+use Mpietrucha\Support\Package;
 use Mpietrucha\Support\Resource;
+use Illuminate\Support\Collection;
 use Mpietrucha\Cli\Concerns\Ignorable;
 use Mpietrucha\Cli\Concerns\Encryptable;
 use Symfony\Component\VarDumper\VarDumper;
-use Symfony\Component\VarDumper\Dumper\CliDumper;
-use Symfony\Component\VarDumper\Dumper\HtmlDumper;
+use Illuminate\Foundation\Console\CliDumper as LaravelCliDumper;
+use Illuminate\Foundation\Console\HtmDumper as LaravelHtmlDumper;
+use Symfony\Component\VarDumper\Dumper\CliDumper as SymfonyCliDumper;
+use Symfony\Component\VarDumper\Dumper\HtmlDumper as SymfonyHtmlDumper;
 
 class SymfonyVarDumperHandler extends AbstractHandler
 {
@@ -22,18 +26,31 @@ class SymfonyVarDumperHandler extends AbstractHandler
 
     protected ?array $copy = null;
 
+    protected ?string $handler = null;
+
     protected ?bool $supportsColors = null;
 
     protected const DEFAULT_ENCRYPT_INDICATOR = '__dump__';
 
-    public function __construct(protected Resource $output = new Resource)
+    public function __construct(protected Resource $output = new Resource, protected Collection $handlers = new Collection)
     {
         $this->encryptableIndicator(self::DEFAULT_ENCRYPT_INDICATOR);
+
+        $this->handler(LaravelHtmlDumper::class);
+        $this->handler(SymfonyHtmlDumper::class);
+
+        $this->handler(LaravelHtmlDumper::class, true);
+        $this->handler(SymfonyCliDumper::class, true);
     }
 
     public function output(Resource $output): void
     {
         $this->output = $output;
+    }
+
+    public function handler(string $handler, bool $console = false): void
+    {
+        $this->handlers->list($console, $handler);
     }
 
     public function supportsColors(?bool $mode = true): void
@@ -47,13 +64,17 @@ class SymfonyVarDumperHandler extends AbstractHandler
             return $this->supportsColors;
         }
 
-        $handler = $this->handler();
+        $handler = $this->getHandler();
 
         return invade(new $handler)->supportsColors();
     }
 
     public function init(): void
     {
+        if (! $this->getHandler()) {
+            return;
+        }
+
         if (! $this->copy()) {
             return;
         }
@@ -61,6 +82,11 @@ class SymfonyVarDumperHandler extends AbstractHandler
         $this->setHandlerDefaultColors($this->getSupportsColors());
 
         $this->setHandlerOutput($this->output);
+    }
+
+    public function refreshing(): void
+    {
+        $this->setHandler();
     }
 
     public function flushing(): ?Line
@@ -116,7 +142,7 @@ class SymfonyVarDumperHandler extends AbstractHandler
             return false;
         }
 
-        $this->copy = [$output, VarDumper::setHandler(null)];
+        $this->copy = [$output, $this->setHandler()];
 
         return true;
     }
@@ -129,32 +155,49 @@ class SymfonyVarDumperHandler extends AbstractHandler
             return false;
         }
 
-        VarDumper::setHandler($handler);
+        $this->setHandler($handler);
 
         $this->setHandlerOutput($output);
 
         return true;
     }
 
+    protected function setHandler(?Closure $handler = null): ?Closure
+    {
+        return VarDumper::setHandler($handler);
+    }
+
     protected function setHandlerDefaultColors(?bool $defaultColors): void
     {
-        $this->handler()::$defaultColors = $defaultColors;
+        $this->getHandler()::$defaultColors = $defaultColors;
     }
 
     protected function setHandlerOutput(Resource $resource): void
     {
-        $this->handler()::$defaultOutput = $resource->stream();
+        $this->getHandler()::$defaultOutput = $resource->stream();
     }
 
     protected function getHandlerOutput(): ?Resource
     {
-        $output = $this->handler()::$defaultOutput;
+        $output = $this->getHandler()::$defaultOutput;
 
         return Resource::build($output);
     }
 
-    protected function handler(): string
+    protected function getHandler(): ?string
     {
-        return [CliDumper::class, HtmlDumper::class][! Cli::inside()];
+        if ($this->handler) {
+            return $this->handler;
+        }
+
+        $handlers = $this->handlers->get(Cli::inside());
+
+        if (! $handlers) {
+            return null;
+        }
+
+        return $this->handler = $handlers->first(function (string $handler) {
+            return Package::exists($handler);
+        });
     }
 }

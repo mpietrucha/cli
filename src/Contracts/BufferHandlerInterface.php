@@ -14,7 +14,9 @@ interface BufferHandlerInterface
 
     public function init(): void;
 
-    public function touch(): void;
+    public function touching(): void;
+
+    public function refreshing(): void;
 
     public function flushing(): ?Line;
 

@@ -25,7 +25,11 @@ abstract class AbstractHandler implements BufferHandlerInterface
     {
     }
 
-    public function touch(): void
+    public function touching(): void
+    {
+    }
+
+    public function refreshing(): void
     {
     }
 

@@ -93,6 +93,13 @@ class Buffer
         return $this;
     }
 
+    public function refresh(): self
+    {
+        $this->handlers()->each->refreshing();
+
+        return $this;
+    }
+
     public function flush(): Result
     {
         return $this->result->flush(function () {
@@ -124,7 +131,7 @@ class Buffer
         }
 
         $handlers = $this->handlers()->when(! $this->result->touched(), function (Collection $handlers) {
-            $handlers->each->touch();
+            $handlers->each->touching();
         });
 
         $this->result->entry(Pipeline::create()
