@@ -31,11 +31,6 @@ class Style extends SymfonyStyle
         parent::__construct($input, $output);
     }
 
-    public static function link(string $url, ?string $anchor = null): string
-    {
-        return collect(['<href=', $url, '>', $anchor ?? $url, '</>'])->toWord();
-    }
-
     public function type(?string $type): self
     {
         $this->type = $type;
@@ -62,6 +57,13 @@ class Style extends SymfonyStyle
         return $this;
     }
 
+    public function link(string $url, ?string $anchor = null): void
+    {
+        $link = collect(['<href=', $url, '>', $anchor ?? $url, '</>'])->toWord();
+
+        $this->writeln($link);
+    }
+
     public function block(string|array $messages, string $type = null, string $style = null, string $prefix = ' ', bool $padding = false, bool $escape = true): void
     {
         $this->currentType = $type;
@@ -76,7 +78,7 @@ class Style extends SymfonyStyle
 
     public function writeln(string|iterable $messages, int $options = 0): void
     {
-        $this->withEvents(fn () => parent::writeLn($messages, $options));
+        $this->withEvents(fn () => parent::writeln($messages, $options));
     }
 
     public function definitionListWithSeparator(string|array ...$list): void
