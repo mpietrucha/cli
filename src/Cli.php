@@ -4,6 +4,7 @@ namespace Mpietrucha\Cli;
 
 use Closure;
 use Exception;
+use Termwind\Terminal;
 use Mpietrucha\Error\Handler;
 use Mpietrucha\Support\Condition;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
@@ -22,6 +23,8 @@ class Cli
     use HasFactory;
 
     use ForwardsCalls;
+
+    protected ?Html $html = null;
 
     protected SymfonyStyle $style;
 
@@ -98,6 +101,16 @@ class Cli
     public function style(): SymfonyStyle
     {
         return $this->style;
+    }
+
+    public function html(): Html
+    {
+        return $this->html ?? Html::create($this->output);
+    }
+
+    public function terminal(): Terminal
+    {
+        return new Terminal;
     }
 
     public function buffer(Closure $configurator): self
