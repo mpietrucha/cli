@@ -88,9 +88,9 @@ class Cli
         return $this;
     }
 
-    public function withErrorHandler(): self
+    public function withErrorHandler(?string $name = null): self
     {
-        Handler::create()->register();
+        Handler::create($name)->register();
 
         return $this;
     }
