@@ -11,6 +11,7 @@ use Mpietrucha\Cli\Buffer\Result;
 use Mpietrucha\Support\Pipeline;
 use Illuminate\Support\Collection;
 use Mpietrucha\Cli\Concerns\Creators;
+use Mpietrucha\Cli\Concerns\Encryptable;
 use Mpietrucha\Support\Concerns\HasFactory;
 use Mpietrucha\Cli\Contracts\BufferHandlerInterface;
 use Mpietrucha\Cli\Buffer\Handlers\SymfonyVarDumperHandler;
@@ -96,6 +97,15 @@ class Buffer
     public function refresh(): self
     {
         $this->handlers()->each->refreshing();
+
+        return $this;
+    }
+
+    public function encryptable(): self
+    {
+        $this->handlers()->filter(function (BufferHandlerInterface $handler) {
+            return class_uses_trait($handler, Encryptable::class);
+        })->each->encryptable();
 
         return $this;
     }
