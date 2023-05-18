@@ -16,8 +16,6 @@ interface BufferHandlerInterface
 
     public function touching(): void;
 
-    public function refreshing(): void;
-
     public function flushing(): ?Line;
 
     public function handle(Entry $entry, Closure $next): Entry;

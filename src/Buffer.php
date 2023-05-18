@@ -94,13 +94,6 @@ class Buffer
         return $this;
     }
 
-    public function refresh(): self
-    {
-        $this->handlers()->each->refreshing();
-
-        return $this;
-    }
-
     public function encryptable(): self
     {
         $this->handlers()->filter(function (BufferHandlerInterface $handler) {

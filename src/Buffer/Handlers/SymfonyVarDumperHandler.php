@@ -18,7 +18,7 @@ use Illuminate\Foundation\Console\HtmDumper as LaravelHtmlDumper;
 use Symfony\Component\VarDumper\Dumper\CliDumper as SymfonyCliDumper;
 use Symfony\Component\VarDumper\Dumper\HtmlDumper as SymfonyHtmlDumper;
 
-class SymfonyVarDumperHandler extends AbstractHandler
+class SymfonyVarDumperHandler extends Handler
 {
     use Ignorable;
 
@@ -39,7 +39,7 @@ class SymfonyVarDumperHandler extends AbstractHandler
         $this->handler(LaravelHtmlDumper::class);
         $this->handler(SymfonyHtmlDumper::class);
 
-        $this->handler(LaravelHtmlDumper::class, true);
+        $this->handler(LaravelCliDumper::class, true);
         $this->handler(SymfonyCliDumper::class, true);
     }
 
@@ -82,11 +82,6 @@ class SymfonyVarDumperHandler extends AbstractHandler
         $this->setHandlerDefaultColors($this->getSupportsColors());
 
         $this->setHandlerOutput($this->output);
-    }
-
-    public function refreshing(): void
-    {
-        $this->setHandler();
     }
 
     public function flushing(): ?Line

@@ -2,6 +2,7 @@
 
 namespace Mpietrucha\Cli\Concerns;
 
+use Mpietrucha\Cli\Cli;
 use Mpietrucha\Support\Base64;
 use Illuminate\Support\Collection;
 use Mpietrucha\Cli\Buffer\Line;
@@ -28,6 +29,10 @@ trait Encryptable
 
     protected function encrypt(string $output): string
     {
+        if (! Cli::inside()) {
+            return $output;
+        }
+
         if (! $this->encryptable || ! $this->encryptableIndicator) {
             return $output;
         }

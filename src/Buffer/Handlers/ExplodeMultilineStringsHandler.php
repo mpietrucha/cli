@@ -5,7 +5,7 @@ namespace Mpietrucha\Cli\Buffer\Handlers;
 use Closure;
 use Mpietrucha\Cli\Buffer\Entry;
 
-class ExplodeMultilineStringsHandler extends AbstractHandler
+class ExplodeMultilineStringsHandler extends Handler
 {
     public function handle(Entry $entry, Closure $next): Entry
     {

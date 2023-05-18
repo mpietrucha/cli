@@ -7,7 +7,7 @@ use Mpietrucha\Cli\Buffer\Entry;
 use Mpietrucha\Cli\Buffer\Line;
 use Mpietrucha\Cli\Contracts\BufferHandlerInterface;
 
-abstract class AbstractHandler implements BufferHandlerInterface
+abstract class Handler implements BufferHandlerInterface
 {
     protected bool $disabled = false;
 
@@ -26,10 +26,6 @@ abstract class AbstractHandler implements BufferHandlerInterface
     }
 
     public function touching(): void
-    {
-    }
-
-    public function refreshing(): void
     {
     }
 
