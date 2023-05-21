@@ -3,7 +3,6 @@
 namespace Mpietrucha\Cli;
 
 use Closure;
-use Exception;
 use Termwind\Terminal;
 use Mpietrucha\Error\Handler;
 use Mpietrucha\Support\Condition;
@@ -17,6 +16,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Mpietrucha\Exception\InvalidArgumentException;
 
 class Cli
 {
@@ -127,7 +127,7 @@ class Cli
         }
 
         if (! $configurator) {
-            throw new Exception('Provide valid configurator callback to create buffer');
+            throw new InvalidArgumentException('Configurator must be instanceof', [Closure::class]);
         }
 
         return $this->buffer($configurator)->getBuffer();

@@ -3,7 +3,6 @@
 namespace Mpietrucha\Cli;
 
 use Closure;
-use Exception;
 use Mpietrucha\Support\Macro;
 use Illuminate\Support\Sleep;
 use Mpietrucha\Cli\Buffer\Entry;
@@ -12,6 +11,7 @@ use Mpietrucha\Support\Pipeline;
 use Illuminate\Support\Collection;
 use Mpietrucha\Cli\Concerns\Creators;
 use Mpietrucha\Cli\Concerns\Encryptable;
+use Mpietrucha\Exception\RuntimeException;
 use Mpietrucha\Support\Concerns\HasFactory;
 use Mpietrucha\Cli\Contracts\BufferHandlerInterface;
 use Mpietrucha\Cli\Buffer\Handlers\SymfonyVarDumperHandler;
@@ -65,7 +65,7 @@ class Buffer
     public function setCallback(?Closure $callback): self
     {
         if ($this->result->touched()) {
-            throw new Exception('Cannot set callback while buffer is already started');
+            throw new RuntimeException('Cannot set callback while buffer is already started');
         }
 
         $this->result->transformer($callback);
