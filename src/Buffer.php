@@ -64,9 +64,7 @@ class Buffer
 
     public function setCallback(?Closure $callback): self
     {
-        if ($this->result->touched()) {
-            throw new RuntimeException('Cannot set callback while buffer is already started');
-        }
+        throw_if($this->result->touched(), new RuntimeException('Cannot set callback while buffer is already started'));
 
         $this->result->transformer($callback);
 
