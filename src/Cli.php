@@ -126,7 +126,9 @@ class Cli
             return $this->buffer;
         }
 
-        throw_unless($configurator, new InvalidArgumentException('Configurator must be instanceof', [Closure::class]));
+        throw_unless($configurator, new InvalidArgumentException(
+            'Configurator must be instanceof', [Closure::class]
+        ));
 
         return $this->buffer($configurator)->getBuffer();
     }
