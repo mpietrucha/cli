@@ -2,6 +2,8 @@
 
 namespace Mpietrucha\Cli\System;
 
+use Closure;
+
 class Ob
 {
     public static function start(?Closure $handler = null, int $chunk = 0): void
