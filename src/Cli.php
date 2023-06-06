@@ -4,6 +4,7 @@ namespace Mpietrucha\Cli;
 
 use Closure;
 use Termwind\Terminal;
+use Mpietrucha\Cli\System;
 use Mpietrucha\Error\Handler;
 use Mpietrucha\Support\Condition;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
@@ -50,7 +51,7 @@ class Cli
 
         $this->forwardTo($this->style())->forwardThenReturnThis();
 
-        register_shutdown_function($this->finish(...));
+        System\Shutdown::register($this->finish(...));
     }
 
     public function __destruct()

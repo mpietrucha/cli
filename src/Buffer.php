@@ -3,6 +3,7 @@
 namespace Mpietrucha\Cli;
 
 use Closure;
+use Mpietrucha\Cli\System;
 use Mpietrucha\Support\Macro;
 use Illuminate\Support\Sleep;
 use Mpietrucha\Cli\Buffer\Entry;
@@ -38,9 +39,9 @@ class Buffer
 
         $this->setCallback($callback)->configurator();
 
-        ob_start($this->callback(...), 1);
+        System\Ob::start($this->callback(...), 1);
 
-        register_shutdown_function($this->flush(...));
+        System\Shutdown::register($this->flush(...));
 
         $this->handlers()->each->init();
     }
@@ -106,7 +107,7 @@ class Buffer
     public function flush(): Result
     {
         return $this->result->flush(function () {
-            ob_end_flush();
+            System\Ob::end();
 
             return $this->handlers()->map->flushing()->filter();
         });
