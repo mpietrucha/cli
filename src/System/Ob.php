@@ -3,7 +3,6 @@
 namespace Mpietrucha\Cli\System;
 
 use Closure;
-use Mpietrucha\Error\Reporting;
 
 class Ob
 {
@@ -14,6 +13,6 @@ class Ob
 
     public static function end(): void
     {
-        Reporting::create()->withoutNotice()->while(fn () => ob_end_flush());
+        ob_end_flush();
     }
 }
