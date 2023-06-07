@@ -68,7 +68,7 @@ class Style extends SymfonyStyle
     {
         $this->currentType = $type;
 
-        parent::block($messages, $this->prefix ?? $type, $style, $prefix, $padding, $escape);
+        parent::block($messages, $this->type ?? $type, $style, $prefix, $padding, $escape);
     }
 
     public function write(string|iterable $messages, bool $newline = false, int $options = 0): void
