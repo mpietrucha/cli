@@ -14,9 +14,9 @@ class Style extends SymfonyStyle
 {
     use HasFactory;
 
-    protected bool $events = false;
+    protected ?string $as = null;
 
-    protected ?string $type = null;
+    protected bool $events = false;
 
     protected array $afterWrite = [];
 
@@ -31,16 +31,16 @@ class Style extends SymfonyStyle
         parent::__construct($input, $output);
     }
 
-    public function type(?string $type): self
+    public function as(?string $as): self
     {
-        $this->type = $type;
+        $this->as = $as;
 
         return $this;
     }
 
-    public function withoutType(): self
+    public function asDefault(): self
     {
-        return $this->type(null);
+        return $this->as(null);
     }
 
     public function beforeWrite(Closure $callback): self
@@ -68,7 +68,7 @@ class Style extends SymfonyStyle
     {
         $this->currentType = $type;
 
-        parent::block($messages, $this->type ?? $type, $style, $prefix, $padding, $escape);
+        parent::block($messages, $this->as ?? $type, $style, $prefix, $padding, $escape);
     }
 
     public function write(string|iterable $messages, bool $newline = false, int $options = 0): void

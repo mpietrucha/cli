@@ -4,26 +4,23 @@ namespace Mpietrucha\Cli;
 
 use Closure;
 use Termwind\Terminal;
-use Mpietrucha\Cli\System;
-use Mpietrucha\Error\Handler;
-use Mpietrucha\Support\Condition;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Console\Input\ArrayInput;
-use Mpietrucha\Support\Concerns\HasFactory;
 use Mpietrucha\Support\Concerns\ForwardsCalls;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Mpietrucha\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\BufferedOutput;
-use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Mpietrucha\Exception\InvalidArgumentException;
+use Mpietrucha\Error\Concerns\InteractsWithErrorHandler;
 
-class Cli
+class Cli extends Component
 {
-    use HasFactory;
-
     use ForwardsCalls;
+
+    use InteractsWithErrorHandler;
 
     protected ?Html $html = null;
 
@@ -34,8 +31,6 @@ class Cli
     protected OutputInterface $output;
 
     protected bool $convert = true;
-
-    protected bool $finished = false;
 
     protected ?Buffer $buffer = null;
 
@@ -51,12 +46,7 @@ class Cli
 
         $this->forwardTo($this->style())->forwardThenReturnThis();
 
-        System\Shutdown::register($this->finish(...));
-    }
-
-    public function __destruct()
-    {
-        $this->finish();
+        parent::__construct();
     }
 
     public static function inside(): bool
@@ -92,13 +82,6 @@ class Cli
         return $this;
     }
 
-    public function withErrorHandler(?Closure $builder = null): self
-    {
-        Handler::build($builder);
-
-        return $this;
-    }
-
     public function style(): SymfonyStyle
     {
         return $this->style;
@@ -106,7 +89,7 @@ class Cli
 
     public function html(): Html
     {
-        return $this->html ?? Html::create($this->output);
+        return $this->html ??= Html::create($this->output);
     }
 
     public function terminal(): Terminal
@@ -134,9 +117,11 @@ class Cli
         return $this->buffer($configurator)->getBuffer();
     }
 
-    public function type(string $type): self
+    public function as(string $as): self
     {
-        $this->style()->type($type)->afterWrite(fn () => $this->style()->withoutType());
+        $this->style()->as($as)->afterWrite(function () {
+            $this->style()->asDefault();
+        });
 
         return $this;
     }
@@ -160,27 +145,15 @@ class Cli
         return $this->convert(false);
     }
 
-    public function finish(): ?Response
+    protected function respond(): ?Response
     {
-        if ($this->finished) {
-            return null;
-        }
-
-        $this->finished = true;
-
         $this->buffer?->flush();
 
         if (self::inside()) {
             return null;
         }
 
-        $contents = $this->output->fetch();
-
-        $response = new Response(
-            Condition::create($contents)->add(function () use ($contents) {
-                return with(new AnsiToHtmlConverter)->convert($contents);
-            }, $this->convert)->resolve()
-        );
+        $response = new Response($this->defaultContents());
 
         if ($this->shouldRespond) {
             $response->send();
@@ -196,15 +169,26 @@ class Cli
 
     protected function defaultOutput(): OutputInterface
     {
-        if (! self::inside()) {
-            return new BufferedOutput(OutputInterface::VERBOSITY_NORMAL, true);
+        if (self::inside()) {
+            return new ConsoleOutput;
         }
 
-        return new ConsoleOutput;
+        return new BufferedOutput(OutputInterface::VERBOSITY_NORMAL, true);
     }
 
     protected function defaultStyle(): SymfonyStyle
     {
         return Style::create($this->input, $this->output);
+    }
+
+    protected function defaultContents(): string
+    {
+        if ($contents = $this->output->fetch() && ! $this->convert) {
+            return $contents;
+        }
+
+        $converter = new AnsiToHtmlConverter();
+
+        return $converter->convert($contents);
     }
 }

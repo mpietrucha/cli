@@ -3,52 +3,30 @@
 namespace Mpietrucha\Cli;
 
 use Closure;
-use Mpietrucha\Cli\System;
-use Mpietrucha\Support\Macro;
-use Illuminate\Support\Sleep;
-use Mpietrucha\Cli\Buffer\Entry;
-use Mpietrucha\Cli\Buffer\Result;
-use Mpietrucha\Support\Pipeline;
 use Illuminate\Support\Collection;
-use Mpietrucha\Cli\Concerns\Creators;
-use Mpietrucha\Cli\Concerns\Encryptable;
-use Mpietrucha\Exception\RuntimeException;
-use Mpietrucha\Support\Concerns\HasFactory;
-use Mpietrucha\Cli\Contracts\BufferHandlerInterface;
-use Mpietrucha\Cli\Buffer\Handlers\SymfonyVarDumperHandler;
-use Mpietrucha\Cli\Buffer\Handlers\ExplodeMultilineStringsHandler;
+use Symfony\Component\HttpFoundation\Response;
 
-class Buffer
+class Buffer extends Component
 {
-    use HasFactory;
-
-    use Creators;
-
-    protected ?Collection $handlers = null;
+    protected bool $tty = true;
 
     protected static ?array $configurator = null;
 
-    protected const HANDLERS = [
-        SymfonyVarDumperHandler::class,
-        ExplodeMultilineStringsHandler::class,
-    ];
-
-    public function __construct(?Closure $callback = null, protected Result $result = new Result)
+    public function __construct(protected ?Closure $callback = null, protected Collection $lines = new Collection)
     {
-        Macro::bootstrap();
+        System\Ob::start(function (string $line): string {
+            $this->lines->push($line);
 
-        $this->setCallback($callback)->configurator();
+            if ($line && $this->tty) {
+                value($this->callback, $line);
+            }
 
-        System\Ob::start($this->callback(...), 1);
+            return '';
+        }, 1);
 
-        System\Shutdown::register($this->flush(...));
+        parent::__construct();
 
-        $this->handlers()->each->init();
-    }
-
-    public function __destruct()
-    {
-        $this->flush();
+        $this->configurator();
     }
 
     public static function configure(?Closure $configurator = null, array $arguments = []): self
@@ -58,90 +36,23 @@ class Buffer
         return self::create();
     }
 
-    public static function eol(): void
-    {
-        Sleep::for(1)->millisecond();
-    }
-
-    public function setCallback(?Closure $callback): self
-    {
-        throw_if($this->result->touched(), new RuntimeException(
-            'Cannot set callback while buffer is already started'
-        ));
-
-        $this->result->transformer($callback);
-
-        return $this;
-    }
-
-    public function handlers(): Collection
-    {
-        $this->handlers ??= collect(self::HANDLERS)->mapIntoInstanceWithKeys();
-
-        return $this->handlers->reject->disabled();
-    }
-
-    public function handler(BufferHandlerInterface $handler): self
-    {
-        $this->handlers()->push($handler);
-
-        return $this;
-    }
-
     public function tty(bool $mode = true): self
     {
-        $this->result->tty($mode);
+        $this->tty = $mode;
 
         return $this;
     }
 
-    public function encryptable(): self
+    public function quiet(): self
     {
-        $this->handlers()->filter(function (BufferHandlerInterface $handler) {
-            return class_uses_trait($handler, Encryptable::class);
-        })->each->encryptable();
-
-        return $this;
+        return $this->tty(false);
     }
 
-    public function flush(): Result
+    protected function respond(): ?Response
     {
-        return $this->result->flush(function () {
-            System\Ob::end();
+        System\Ob::end();
 
-            return $this->handlers()->map->flushing()->filter();
-        });
-    }
-
-    protected function callback(string $output): string
-    {
-        $this->lines($output);
-
-        return '';
-    }
-
-    protected function lines(string $output): void
-    {
-        if (! $output) {
-            return;
-        }
-
-        $entry = Entry::create($output);
-
-        if (! $this->handlers()->count()) {
-            $this->result->entry($entry);
-
-            return;
-        }
-
-        $handlers = $this->handlers()->when(! $this->result->touched(), function (Collection $handlers) {
-            $handlers->each->touching();
-        });
-
-        $this->result->entry(Pipeline::create()
-            ->send($entry)
-            ->through($handlers->toArray())
-            ->thenReturn());
+        return new Response($this->lines->toNewLineWords());
     }
 
     protected function configurator(): void
@@ -158,7 +69,7 @@ class Buffer
             return;
         }
 
-        $this->setCallback($callback);
+        $this->callback = $callback;
 
         self::$configurator = null;
     }
