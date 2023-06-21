@@ -9,6 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 class Buffer extends Component
 {
+    use Creators;
+
     protected bool $tty = true;
 
     protected static ?array $configurator = null;
