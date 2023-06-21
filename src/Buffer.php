@@ -4,6 +4,7 @@ namespace Mpietrucha\Cli;
 
 use Closure;
 use Illuminate\Support\Collection;
+use Mpietrucha\Cli\Concerns\Creators;
 use Symfony\Component\HttpFoundation\Response;
 
 class Buffer extends Component
@@ -34,6 +35,13 @@ class Buffer extends Component
         self::$configurator = [$configurator, $arguments];
 
         return self::create();
+    }
+
+    public function callback(?Closure $callback): self
+    {
+        $this->callback = $callback;
+
+        return $this;
     }
 
     public function tty(bool $mode = true): self
@@ -69,7 +77,7 @@ class Buffer extends Component
             return;
         }
 
-        $this->callback = $callback;
+        $this->callback($callback);
 
         self::$configurator = null;
     }
