@@ -40,7 +40,7 @@ class Cli extends Component
     {
         $this->setInput($this->defaultInput($input));
 
-        $this->setOutput($this->defaultOutput());
+        $this->setOutput(self::defaultOutput());
 
         $this->setStyle($this->defaultStyle());
 
@@ -52,6 +52,15 @@ class Cli extends Component
     public static function inside(): bool
     {
         return \PHP_SAPI === 'cli' || \PHP_SAPI === 'phpdbg';
+    }
+
+    public static function defaultOutput(): OutputInterface
+    {
+        if (self::inside()) {
+            return new ConsoleOutput;
+        }
+
+        return new BufferedOutput(OutputInterface::VERBOSITY_NORMAL, true);
     }
 
     public function setInput(InputInterface $input): self
@@ -165,15 +174,6 @@ class Cli extends Component
     protected function defaultInput(array $input): InputInterface
     {
         return new ArrayInput($input);
-    }
-
-    protected function defaultOutput(): OutputInterface
-    {
-        if (self::inside()) {
-            return new ConsoleOutput;
-        }
-
-        return new BufferedOutput(OutputInterface::VERBOSITY_NORMAL, true);
     }
 
     protected function defaultStyle(): SymfonyStyle
