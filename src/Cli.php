@@ -4,6 +4,7 @@ namespace Mpietrucha\Cli;
 
 use Closure;
 use Termwind\Terminal;
+use Illuminate\Console\View\Components\Factory;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Component\HttpFoundation\Response;
 use Mpietrucha\Support\Concerns\ForwardsCalls;
@@ -33,6 +34,8 @@ class Cli extends Component
     protected bool $convert = true;
 
     protected ?Buffer $buffer = null;
+
+    protected ?Factory $components = null;
 
     protected bool $shouldRespond = false;
 
@@ -99,6 +102,11 @@ class Cli extends Component
     public function html(): Html
     {
         return $this->html ??= Html::create($this->output);
+    }
+
+    public function components(): Factory
+    {
+        return $this->components ??=  new Factory($this->output);
     }
 
     public function terminal(): Terminal

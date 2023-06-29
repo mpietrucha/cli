@@ -26,7 +26,8 @@
         "sensiolabs/ansi-to-html": "^1.2",
         "symfony/http-foundation": "^6.2",
         "mpietrucha/error": "^1.0",
-        "nunomaduro/termwind": "^1.15"
+        "nunomaduro/termwind": "^1.15",
+        "illuminate/console": "^10.14"
     },
     "require-dev": {
         "symfony/var-dumper": "^6.2"
