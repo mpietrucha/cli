@@ -4,9 +4,7 @@ namespace Mpietrucha\Cli;
 
 use Closure;
 use Termwind\Terminal;
-use Mpietrucha\Cli\Output\Bridge;
 use Illuminate\Support\Collection;
-use Mpietrucha\Cli\Contracts\HoldableInterface;
 use Illuminate\Console\View\Components\Factory;
 use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Component\HttpFoundation\Response;
@@ -46,7 +44,7 @@ class Cli extends Component
     {
         $this->setInput($this->defaultInput($input));
 
-        $this->setOutput(new Bridge(self::defaultOutput()));
+        $this->setOutput(self::defaultOutput());
 
         $this->setStyle($this->defaultStyle());
 
@@ -163,25 +161,6 @@ class Cli extends Component
     public function raw(): self
     {
         return $this->convert(false);
-    }
-
-    public function hold(?Closure $while = null): self
-    {
-        $this->holders()->each(fn (HoldableInterface $holder) => $holder->hold($while, $this));
-
-        return $this;
-    }
-
-    public function release(): self
-    {
-        $this->holders()->each(fn (HoldableInterface $holder) => $holder->release());
-
-        return $this;
-    }
-
-    protected function holders(): Collection
-    {
-        return collect($this)->values()->filter(fn (mixed $property) => $property instanceof HoldableInterface);
     }
 
     protected function respond(): ?Response

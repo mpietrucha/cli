@@ -4,10 +4,9 @@ namespace Mpietrucha\Cli;
 
 use Mpietrucha\Support\Concerns\HasFactory;
 use Symfony\Component\HttpFoundation\Response;
-use Mpietrucha\Cli\Contracts\HoldableInterface;
 use Mpietrucha\Cli\Contracts\ShouldFlushInterface;
 
-abstract class Component implements ShouldFlushInterface, HoldableInterface
+abstract class Component implements ShouldFlushInterface
 {
     use HasFactory;
 

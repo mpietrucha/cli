@@ -5,14 +5,11 @@ namespace Mpietrucha\Cli;
 use Closure;
 use Illuminate\Support\Collection;
 use Mpietrucha\Cli\Concerns\Creators;
-use Mpietrucha\Cli\Concerns\Holdable;
 use Symfony\Component\HttpFoundation\Response;
 
 class Buffer extends Component
 {
     use Creators;
-
-    use Holdable;
 
     protected bool $tty = true;
 
@@ -24,7 +21,7 @@ class Buffer extends Component
             $this->lines->push($line);
 
             if ($line && $this->tty) {
-                $this->withHold(fn () => value($this->callback, $line));
+                value($this->callback, $line);
             }
 
             return '';
